@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, or } from 'drizzle-orm';
 import { db } from '../db';
-import { notes } from '../db/schema';
+import { connections, notes, users } from '../db/schema';
 
 const router = Router();
 
@@ -34,6 +34,7 @@ router.post('/', async (req: Request, res: Response) => {
         const userId = body.profileId || body.userId;
 
         const [newNote] = await db.insert(notes).values({
+            id: body.id, // Use provided ID if available
             userId: userId,
             type: body.type,
             content: body.content,
@@ -44,7 +45,41 @@ router.post('/', async (req: Request, res: Response) => {
             bookmarked: body.bookmarked || false,
         }).returning();
 
+
         res.json(newNote);
+
+        // Send Push Notification to Partner
+        try {
+            // Find partner
+            const connection = await db.query.connections.findFirst({
+                where: or(
+                    eq(connections.userA, userId),
+                    eq(connections.userB, userId)
+                )
+            });
+
+            if (connection) {
+                const partnerId = connection.userA === userId ? connection.userB : connection.userA;
+                const partner = await db.query.users.findFirst({
+                    where: eq(users.id, partnerId)
+                });
+
+                if (partner && partner.pushToken) {
+                    const { PushService } = await import('../services/push');
+                    await PushService.sendPushNotification(
+                        partner.pushToken,
+                        'New Note! 💌',
+                        'Your partner sent you a new note!',
+                        { type: 'NOTE_RECEIVED', noteId: newNote.id }
+                    );
+                }
+            }
+        } catch (pushError) {
+            console.error('Push notification failed:', pushError);
+            // Don't fail the request
+        }
+
+
     } catch (error) {
         console.error('POST note error:', error);
         res.status(500).json({ error: 'Failed to save note' });

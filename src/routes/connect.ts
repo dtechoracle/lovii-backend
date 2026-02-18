@@ -56,7 +56,8 @@ router.post('/', async (req: Request, res: Response) => {
         res.json({
             success: true,
             partnerId: partner.id,
-            partnerName: partner.name
+            partnerName: partner.name,
+            partnerCode: partner.code
         });
 
     } catch (error) {
