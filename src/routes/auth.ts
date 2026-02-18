@@ -81,4 +81,24 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 });
 
+// POST /api/auth/pushtoken
+router.post('/pushtoken', async (req: Request, res: Response) => {
+    try {
+        const { userId, token } = req.body;
+
+        if (!userId || !token) {
+            return res.status(400).json({ error: 'User ID and Token are required' });
+        }
+
+        await db.update(users)
+            .set({ pushToken: token })
+            .where(eq(users.id, userId));
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Push Token Sync Error:', error);
+        res.status(500).json({ error: 'Failed to sync push token' });
+    }
+});
+
 export default router;

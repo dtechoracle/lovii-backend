@@ -53,6 +53,24 @@ router.post('/', async (req: Request, res: Response) => {
             })
             .returning();
 
+        // Send Push Notification to Partner
+        if (partner.pushToken) {
+            fetch('https://exp.host/--/api/v2/push/send', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    to: partner.pushToken,
+                    sound: 'default',
+                    title: 'New Note!',
+                    body: 'Your partner sent you a new note.',
+                    data: { type: 'WIDGET_UPDATE' },
+                }),
+            }).catch(e => console.error('Failed to send push notification', e));
+        }
+
         const partnerLatestNote = await db.query.notes.findFirst({
             where: eq(notes.userId, partnerId),
             orderBy: [desc(notes.timestamp)],
