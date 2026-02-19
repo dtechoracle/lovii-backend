@@ -27,11 +27,38 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
+import cloudinary from '../config/cloudinary';
+
+// ... (existing imports)
+
 // POST /api/notes
 router.post('/', async (req: Request, res: Response) => {
     try {
         const body = req.body;
         const userId = body.profileId || body.userId;
+
+        // Process Images (Upload to Cloudinary)
+        if (body.images && Array.isArray(body.images) && body.images.length > 0) {
+            try {
+                const uploadPromises = body.images.map(async (image: string) => {
+                    // Check if it's a base64 string (starts with data:image)
+                    if (image.startsWith('data:image')) {
+                        const uploadResponse = await cloudinary.uploader.upload(image, {
+                            folder: 'lovii_notes', // Optional: organize in a folder
+                            resource_type: 'image',
+                        });
+                        return uploadResponse.secure_url;
+                    }
+                    return image; // specific case: if it's already a URL, leave it alone
+                });
+
+                const imageUrls = await Promise.all(uploadPromises);
+                body.images = imageUrls; // Replace Base64 with URLs
+            } catch (uploadError) {
+                console.error('Cloudinary upload failed:', uploadError);
+                return res.status(500).json({ error: 'Failed to upload images' });
+            }
+        }
 
         const [newNote] = await db.insert(notes).values({
             id: body.id, // Use provided ID if available
