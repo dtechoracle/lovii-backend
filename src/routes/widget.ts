@@ -8,16 +8,25 @@ const router = Router();
 // POST /api/widget
 router.post('/', async (req: Request, res: Response) => {
     try {
-        const { myId, note } = req.body;
+        const { myId, noteId } = req.body;
 
-        if (!myId || !note) {
-            return res.status(400).json({ error: "Missing required fields: myId, note" });
+        if (!myId || !noteId) {
+            return res.status(400).json({ error: "Missing required fields: myId, noteId" });
         }
 
         const me = await db.query.users.findFirst({
             where: eq(users.id, myId)
         });
         if (!me) return res.status(404).json({ error: "User not found" });
+
+        // Verify the note exists and belongs to user
+        const savedNote = await db.query.notes.findFirst({
+            where: eq(notes.id, noteId)
+        });
+
+        if (!savedNote) {
+            return res.status(404).json({ error: "Note not found" });
+        }
 
         const connection = await db.query.connections.findFirst({
             where: or(
@@ -39,19 +48,8 @@ router.post('/', async (req: Request, res: Response) => {
             return res.status(404).json({ error: "Partner not found in database" });
         }
 
-        const [savedNote] = await db
-            .insert(notes)
-            .values({
-                userId: myId,
-                type: note.type,
-                content: note.content,
-                color: note.color,
-                images: note.images,
-                timestamp: note.timestamp,
-                pinned: note.pinned || false,
-                bookmarked: note.bookmarked || false,
-            })
-            .returning();
+        // We already have the note, so we don't insert it again.
+        // Just notify.
 
         // Send Push Notification to Partner
         if (partner.pushToken) {

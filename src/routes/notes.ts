@@ -40,6 +40,10 @@ router.post('/', async (req: Request, res: Response) => {
             content: body.content,
             color: body.color,
             images: body.images,
+            fontFamily: body.fontFamily,
+            fontWeight: body.fontWeight,
+            fontStyle: body.fontStyle,
+            textDecorationLine: body.textDecorationLine,
             timestamp: body.timestamp,
             pinned: body.pinned || false,
             bookmarked: body.bookmarked || false,
@@ -70,7 +74,11 @@ router.post('/', async (req: Request, res: Response) => {
                         partner.pushToken,
                         'New Note! 💌',
                         'Your partner sent you a new note!',
-                        { type: 'NOTE_RECEIVED', noteId: newNote.id }
+                        {
+                            type: 'NOTE_RECEIVED',
+                            noteId: newNote.id,
+                            note: newNote // Send full data for "Webhook" style instant update
+                        }
                     );
                 }
             }
