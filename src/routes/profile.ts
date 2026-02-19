@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { eq, or } from 'drizzle-orm';
 import { db } from '../db';
 import { connections, users } from '../db/schema';
+import cloudinary from '../config/cloudinary';
 
 const router = Router();
 
