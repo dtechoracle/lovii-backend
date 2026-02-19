@@ -32,6 +32,13 @@ export const notes = pgTable('notes', {
     pinned: boolean('pinned').default(false),
     bookmarked: boolean('bookmarked').default(false),
     timestamp: bigint('timestamp', { mode: 'number' }).notNull(),
+    musicTrack: jsonb('music_track').$type<{
+        title: string;
+        artist: string;
+        coverUrl: string;
+        previewUrl?: string;
+        externalUrl?: string;
+    }>(),
     createdAt: timestamp('created_at').defaultNow(),
 });
 

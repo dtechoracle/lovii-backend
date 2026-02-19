@@ -74,6 +74,7 @@ router.post('/', async (req: Request, res: Response) => {
             timestamp: body.timestamp,
             pinned: body.pinned || false,
             bookmarked: body.bookmarked || false,
+            musicTrack: body.musicTrack,
         }).returning();
 
 
