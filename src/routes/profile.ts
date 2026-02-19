@@ -8,10 +8,30 @@ const router = Router();
 // PUT /api/profile
 router.put('/', async (req: Request, res: Response) => {
     try {
-        const { id, name, avatar } = req.body;
+        const { id, name } = req.body;
+        let { avatar } = req.body;
 
         if (!id) {
             return res.status(400).json({ error: 'ID required' });
+        }
+
+        // Handle Base64 Avatar Upload
+        if (avatar && avatar.startsWith('data:image')) {
+            try {
+                const uploadResponse = await cloudinary.uploader.upload(avatar, {
+                    folder: 'lovii_avatars',
+                    resource_type: 'image',
+                    public_id: `avatar_${id}`, // Overwrite existing avatar for this user
+                    overwrite: true,
+                    transformation: [{ width: 400, height: 400, crop: 'fill' }] // Optimize size
+                });
+                avatar = uploadResponse.secure_url;
+            } catch (uploadError) {
+                console.error('Avatar upload failed:', uploadError);
+                // Fallback: Don't update avatar if upload fails? Or continue?
+                // Let's return error to client
+                return res.status(500).json({ error: 'Failed to upload avatar image' });
+            }
         }
 
         const [updatedUser] = await db.update(users)
