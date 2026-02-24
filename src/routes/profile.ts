@@ -73,40 +73,70 @@ router.get('/', async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        const connection = await db.query.connections.findFirst({
+        const allConnections = await db.query.connections.findMany({
             where: or(
                 eq(connections.userA, id as string),
                 eq(connections.userB, id as string)
             )
         });
 
-        let partnerInfo = {};
-        if (connection) {
-            const partnerId = connection.userA === id ? connection.userB : connection.userA;
+        const partnersList = await Promise.all(allConnections.map(async (conn) => {
+            const partnerId = conn.userA === id ? conn.userB : conn.userA;
             const partner = await db.query.users.findFirst({
                 where: eq(users.id, partnerId)
             });
             if (partner) {
-                partnerInfo = {
-                    partnerId: partner.id,
-                    partnerName: partner.name,
-                    partnerCode: partner.code,
-                    connectedAt: connection.createdAt
+                return {
+                    id: partner.id,
+                    name: partner.name,
+                    code: partner.code,
+                    avatar: partner.avatar,
+                    connectedAt: conn.createdAt ? new Date(conn.createdAt).getTime() : undefined
                 };
             }
-        }
+            return null;
+        }));
+
+        const activePartners = partnersList.filter(p => p !== null);
 
         res.json({
             id: user.id,
             name: user.name,
             code: user.code,
             avatar: user.avatar,
-            ...partnerInfo
+            points: user.points,
+            maxPoints: user.maxPoints,
+            partners: activePartners,
+            // Keep legacy for compatibility
+            partnerId: activePartners[0]?.id,
+            partnerName: activePartners[0]?.name,
+            partnerCode: activePartners[0]?.code,
+            connectedAt: activePartners[0]?.connectedAt
         });
 
     } catch (error) {
         console.error('GET profile error:', error);
         res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+});
+
+// POST /api/profile/topup (Temporary for testing)
+router.post('/topup', async (req: Request, res: Response) => {
+    try {
+        const { id, points } = req.body;
+        if (!id || points === undefined) return res.status(400).json({ error: 'ID and points required' });
+
+        const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const [updated] = await db.update(users)
+            .set({ points: user.points + points })
+            .where(eq(users.id, id))
+            .returning();
+
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ error: 'Top up failed' });
     }
 });
 

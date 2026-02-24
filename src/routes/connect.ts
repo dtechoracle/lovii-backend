@@ -47,6 +47,26 @@ router.post('/', async (req: Request, res: Response) => {
             });
         }
 
+        // Check for existing active connections to determine cost
+        const myActiveConnections = await db.query.connections.findMany({
+            where: or(
+                eq(connections.userA, myId),
+                eq(connections.userB, myId)
+            )
+        });
+
+        const PARTNER_COST = 5;
+        if (myActiveConnections.length >= 1) {
+            if (me.points < PARTNER_COST) {
+                return res.status(403).json({ error: `Connection fails. You need ${PARTNER_COST} points to add another partner. 💝` });
+            }
+
+            // Deduct points
+            await db.update(users)
+                .set({ points: me.points - PARTNER_COST })
+                .where(eq(users.id, myId));
+        }
+
         await db.insert(connections).values({
             userA: myId,
             userB: partner.id,
@@ -57,12 +77,36 @@ router.post('/', async (req: Request, res: Response) => {
             success: true,
             partnerId: partner.id,
             partnerName: partner.name,
-            partnerCode: partner.code
+            partnerCode: partner.code,
+            pointsDeducted: myActiveConnections.length >= 1 ? PARTNER_COST : 0
         });
 
     } catch (error) {
         console.error('Connection error:', error);
         res.status(500).json({ error: 'Connection failed' });
+    }
+});
+
+// DELETE /api/connect
+router.delete('/', async (req: Request, res: Response) => {
+    try {
+        const { myId, partnerId } = req.body;
+
+        if (!myId || !partnerId) {
+            return res.status(400).json({ error: 'Missing IDs' });
+        }
+
+        await db.delete(connections).where(
+            or(
+                and(eq(connections.userA, myId), eq(connections.userB, partnerId)),
+                and(eq(connections.userA, partnerId), eq(connections.userB, myId))
+            )
+        );
+
+        res.json({ success: true, message: 'Disconnected successfully' });
+    } catch (error) {
+        console.error('Disconnect error:', error);
+        res.status(500).json({ error: 'Disconnect failed' });
     }
 });
 

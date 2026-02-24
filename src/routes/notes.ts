@@ -60,6 +60,26 @@ router.post('/', async (req: Request, res: Response) => {
             }
         }
 
+        const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Determine cost
+        let cost = 1;
+        if (body.type === 'collage' || body.type === 'music') {
+            cost = 2;
+        }
+
+        if (user.points < cost) {
+            return res.status(403).json({ error: 'Insufficient points' });
+        }
+
+        // Deduct points
+        await db.update(users)
+            .set({ points: user.points - cost })
+            .where(eq(users.id, userId));
+
         const [newNote] = await db.insert(notes).values({
             id: body.id, // Use provided ID if available
             userId: userId,
