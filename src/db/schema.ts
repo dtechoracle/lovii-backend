@@ -7,8 +7,6 @@ export const users = pgTable('users', {
     name: text('name'),
     avatar: text('avatar'),
     pushToken: text('push_token'),
-    points: bigint('points', { mode: 'number' }).default(5).notNull(),
-    maxPoints: bigint('max_points', { mode: 'number' }).default(5).notNull(),
     createdAt: timestamp('created_at').defaultNow(),
 });
 
