@@ -1,0 +1,10 @@
+﻿410b168 added multiple partners
+2316e83 fixed build error
+ea318ed new
+b91b200 another one
+f10984b added cloudinary
+0b4c1e3 Fixed duplicate issue
+65061f1 fixed issue
+39714a6 fixed build error
+cb5cc3f fixed build error
+e935e33 first one

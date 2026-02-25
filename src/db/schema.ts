@@ -21,7 +21,7 @@ export const connections = pgTable('connections', {
 export const notes = pgTable('notes', {
     id: uuid('id').defaultRandom().primaryKey(),
     userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-    type: text('type', { enum: ['text', 'drawing', 'collage'] }).notNull(),
+    type: text('type', { enum: ['text', 'drawing', 'collage', 'music', 'tasks'] }).notNull(),
     content: text('content').notNull(),
     color: text('color'),
     images: jsonb('images').$type<string[]>(),
@@ -39,6 +39,14 @@ export const notes = pgTable('notes', {
         previewUrl?: string;
         externalUrl?: string;
     }>(),
+    tasks: jsonb('tasks').$type<{
+        id: string;
+        text: string;
+        completed: boolean;
+        assignedTo?: 'me' | 'partner' | 'both';
+        dueDate?: number;
+        category?: 'chores' | 'groceries' | 'dates' | 'other';
+    }[]>(),
     createdAt: timestamp('created_at').defaultNow(),
 });
 
