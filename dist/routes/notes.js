@@ -104,6 +104,7 @@ router.post('/', async (req, res) => {
             pinned: body.pinned || false,
             bookmarked: body.bookmarked || false,
             musicTrack: body.musicTrack,
+            tasks: body.tasks ?? null,
         }).returning();
         res.json(newNote);
         // Send Push Notification to Partner
