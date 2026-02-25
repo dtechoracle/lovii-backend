@@ -160,4 +160,29 @@ deductRoute.post('/', async (req: Request, res: Response) => {
     }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/profile/add — atomically increments users.points in the DB
+// ─────────────────────────────────────────────────────────────────────────────
+export const addRoute = Router();
+addRoute.post('/', async (req: Request, res: Response) => {
+    try {
+        const { userId, amount, reason } = req.body;
+        if (!userId || !amount) return res.status(400).json({ error: 'userId and amount required' });
+
+        const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const [updated] = await db.update(users)
+            .set({ points: sql`${users.points} + ${amount}` })
+            .where(eq(users.id, userId))
+            .returning({ points: users.points });
+
+        console.log(`[Points Add] user=${userId} amount=${amount} reason=${reason || 'topup'} remaining=${updated.points}`);
+        res.json({ success: true, points: updated.points });
+    } catch (error) {
+        console.error('[Add Points]', error);
+        res.status(500).json({ error: 'Failed to add points' });
+    }
+});
+
 export default router;
