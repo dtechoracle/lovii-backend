@@ -1,4 +1,4 @@
-import { bigint, boolean, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { bigint, boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
     id: uuid('id').defaultRandom().primaryKey(),
@@ -55,5 +55,15 @@ export const tasks = pgTable('tasks', {
     userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     text: text('text').notNull(),
     completed: boolean('completed').default(false),
+    createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Tracks days where a user paid to restore their streak
+// Each row = one restored calendar day (midnight UTC timestamp)
+export const streakRestores = pgTable('streak_restores', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+    restoredDay: bigint('restored_day', { mode: 'number' }).notNull(), // midnight UTC timestamp
+    pointsSpent: integer('points_spent').default(5).notNull(),
     createdAt: timestamp('created_at').defaultNow(),
 });

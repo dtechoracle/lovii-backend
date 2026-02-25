@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.tasks = exports.notes = exports.connections = exports.users = void 0;
+exports.streakRestores = exports.tasks = exports.notes = exports.connections = exports.users = void 0;
 const pg_core_1 = require("drizzle-orm/pg-core");
 exports.users = (0, pg_core_1.pgTable)('users', {
     id: (0, pg_core_1.uuid)('id').defaultRandom().primaryKey(),
@@ -41,5 +41,14 @@ exports.tasks = (0, pg_core_1.pgTable)('tasks', {
     userId: (0, pg_core_1.uuid)('user_id').references(() => exports.users.id, { onDelete: 'cascade' }).notNull(),
     text: (0, pg_core_1.text)('text').notNull(),
     completed: (0, pg_core_1.boolean)('completed').default(false),
+    createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow(),
+});
+// Tracks days where a user paid to restore their streak
+// Each row = one restored calendar day (midnight UTC timestamp)
+exports.streakRestores = (0, pg_core_1.pgTable)('streak_restores', {
+    id: (0, pg_core_1.uuid)('id').defaultRandom().primaryKey(),
+    userId: (0, pg_core_1.uuid)('user_id').references(() => exports.users.id, { onDelete: 'cascade' }).notNull(),
+    restoredDay: (0, pg_core_1.bigint)('restored_day', { mode: 'number' }).notNull(), // midnight UTC timestamp
+    pointsSpent: (0, pg_core_1.integer)('points_spent').default(5).notNull(),
     createdAt: (0, pg_core_1.timestamp)('created_at').defaultNow(),
 });

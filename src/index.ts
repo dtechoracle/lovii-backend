@@ -5,6 +5,7 @@ import authRoutes from './routes/auth';
 import connectRoutes from './routes/connect';
 import notesRoutes from './routes/notes';
 import profileRoutes from './routes/profile';
+import streakRoutes, { deductRoute } from './routes/streak';
 import tasksRoutes from './routes/tasks';
 import widgetRoutes from './routes/widget';
 
@@ -39,7 +40,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/connect', connectRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/profile/deduct', deductRoute);
 app.use('/api/tasks', tasksRoutes);
+app.use('/api/streak', streakRoutes);
 app.use('/api/widget', widgetRoutes);
 
 app.listen(PORT, () => {
