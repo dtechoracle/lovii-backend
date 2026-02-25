@@ -34,7 +34,8 @@ router.post('/register', async (req: Request, res: Response) => {
                 id: newUser.id,
                 code: newUser.code,
                 name: newUser.name,
-                avatar: newUser.avatar
+                avatar: newUser.avatar,
+                points: newUser.points,   // always 20 for new users
             }
         });
     } catch (error) {
@@ -72,7 +73,8 @@ router.post('/login', async (req: Request, res: Response) => {
                 id: user.id,
                 code: user.code,
                 name: user.name,
-                avatar: user.avatar
+                avatar: user.avatar,
+                points: user.points,      // real points balance
             }
         });
     } catch (error) {

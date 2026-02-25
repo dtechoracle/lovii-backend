@@ -101,6 +101,7 @@ router.get('/', async (req: Request, res: Response) => {
             name: user.name,
             code: user.code,
             avatar: user.avatar,
+            points: user.points,
             ...partnerInfo
         });
 

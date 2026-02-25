@@ -2,11 +2,12 @@ import { bigint, boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 
 
 export const users = pgTable('users', {
     id: uuid('id').defaultRandom().primaryKey(),
-    code: text('code').notNull().unique(), // e.g. "LOVII-1234"
+    code: text('code').notNull().unique(),
     passwordHash: text('password_hash').notNull(),
     name: text('name'),
     avatar: text('avatar'),
     pushToken: text('push_token'),
+    points: integer('points').default(20).notNull(),
     createdAt: timestamp('created_at').defaultNow(),
 });
 
