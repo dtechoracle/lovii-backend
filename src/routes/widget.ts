@@ -59,7 +59,11 @@ router.post('/', async (req: Request, res: Response) => {
                     partner.pushToken,
                     'New Widget Update! 💖',
                     'Your partner updated their mood/status!',
-                    { type: 'WIDGET_UPDATE' }
+                    {
+                        type: 'WIDGET_UPDATE',
+                        note: savedNote,
+                        noteId: savedNote.id
+                    }
                 );
             } catch (error) {
                 console.error('Failed to send push notification', error);

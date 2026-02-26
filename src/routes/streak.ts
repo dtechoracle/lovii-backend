@@ -48,10 +48,12 @@ router.get('/', async (req: Request, res: Response) => {
         }
 
         const restores = await db.query.streakRestores.findMany({
-            where: eq(streakRestores.userId, userId as string),
+            where: partnerId
+                ? or(eq(streakRestores.userId, userId as string), eq(streakRestores.userId, partnerId))
+                : eq(streakRestores.userId, userId as string),
             columns: { restoredDay: true }
         });
-        const restoredDays = restores.map(r => r.restoredDay);
+        const restoredDays = Array.from(new Set(restores.map(r => r.restoredDay)));
 
         const myDaySet = new Set([...myDays, ...restoredDays]);
         const partnerDaySet = new Set([...partnerDays, ...restoredDays]);

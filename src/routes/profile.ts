@@ -9,12 +9,15 @@ const router = Router();
 // PUT /api/profile
 router.put('/', async (req: Request, res: Response) => {
     try {
-        const { id, name } = req.body;
-        let { avatar } = req.body;
+        const { id, name, avatar: rawAvatar } = req.body;
+        let avatar = rawAvatar;
 
         if (!id) {
             return res.status(400).json({ error: 'ID required' });
         }
+
+        const updateData: any = {};
+        if (name !== undefined) updateData.name = name;
 
         // Handle Base64 Avatar Upload
         if (avatar && avatar.startsWith('data:image')) {
@@ -29,14 +32,23 @@ router.put('/', async (req: Request, res: Response) => {
                 avatar = uploadResponse.secure_url;
             } catch (uploadError) {
                 console.error('Avatar upload failed:', uploadError);
-                // Fallback: Don't update avatar if upload fails? Or continue?
-                // Let's return error to client
                 return res.status(500).json({ error: 'Failed to upload avatar image' });
             }
         }
 
+        // Only update avatar if it was provided (either still same URL or new Cloudinary URL)
+        // This prevents overwriting with undefined if the field is missing in request
+        if (avatar !== undefined) {
+            // If it's a local path (starts with file:), do NOT save it to DB
+            if (typeof avatar === 'string' && avatar.startsWith('file:')) {
+                console.warn('Blocked local image path from being saved to DB:', avatar);
+            } else {
+                updateData.avatar = avatar;
+            }
+        }
+
         const [updatedUser] = await db.update(users)
-            .set({ name, avatar })
+            .set(updateData)
             .where(eq(users.id, id))
             .returning();
 
