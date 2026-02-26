@@ -43,7 +43,8 @@ router.post('/', async (req: Request, res: Response) => {
                 success: true,
                 message: 'Already connected',
                 partnerId: partner.id,
-                partnerName: partner.name
+                partnerName: partner.name,
+                partnerCode: partner.code
             });
         }
 
